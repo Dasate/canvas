@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas</title>
+    <style>
+        * {margin: 0;padding: 0;}
+        body {overflow: hidden;}
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+    window.onload = function () {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var canvasW, canvasH;/*canvas宽高*/
+        var partNum = 1000;/*粒子数量*/
+        var P = [];
+        var X, Y;/*鼠标位置*/
+        var mouseover = false;
+        var mousedown = false;
+
+        /*初始化canvas的宽高*/
+        canvasInit();
+        window.onresize = canvasInit;
+        function canvasInit() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvasW = canvas.width;
+            canvasH = canvas.height;
+        }
+        function bg() {
+            ctx.fillStyle = "rgba(20,20,20,0.1)";/*对象颜色*/
+            ctx.fillRect(0, 0, canvasW, canvasH)/*对象起点和终点*/
+        }
+        /*随机函数*/
+        function rand(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+        /*对象模板*/
+        var part = function (x, y, vx, vy, r, col) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.r = r;
+            this.col = col;
+        };
+        /*对象数据初始化*/
+        function init() {
+            var x, y, vx, vy, r, red, green, blue, col;
+            for (var i = 0; i < partNum; i++) {
+                x = rand(0, canvasW);
+                y = rand(0, canvasH);
+                vx = rand(-1, 1);
+                vy = rand(-1, 1);
+                r = rand(0.2, 2);
+                red = rand(50, 255);
+                green = rand(50, 255);
+                blue = rand(50, 255);
+                col = "rgba(" + red + "," + green + "," + blue + ",1)";
+
+                P.push(new part(x, y, vx, vy, r, col));
+            }
+        }
+        /*对象写入canvas*/
+        function draw() {
+            var p;
+            for (var i = 0; i < P.length; i++) {
+                p = P[i];
+                if (mouseover) {attract(p);}
+                bounce(p);
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.975;
+                p.vy *= 0.975;
+                ctx.fillStyle = p.col;
+                ctx.fillRect(p.x, p.y, p.r, p.r)
+            }
+        }
+        /*对象行为*/
+        function attract(p) {
+            var dx = (p.x - X);
+            var dy = (p.y - Y);
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            var angle = Math.atan2(dy, dx);
+            if (dist > 0 && dist < 3000) {
+                if (!mousedown) {
+                    if(dist>5){
+                        p.vx -= 20 / (p.r * dist) * Math.cos(angle);
+                        p.vy -= 20 / (p.r * dist) * Math.sin(angle);
+                    }
+                } else if (mousedown) {
+                    p.vx += 250 / (p.r * dist) * Math.cos(angle);
+                    p.vy += 250 / (p.r * dist) * Math.sin(angle);
+                }
+            }
+        }
+        /*边缘反弹*/
+        function bounce(p) {
+            if (p.x < p.r) {
+                p.x = p.r;
+                p.vx *= -1;
+            }
+            if (p.x > canvasW - p.r) {
+                p.x = canvasW - p.r;
+                p.vx *= -1;
+            }
+            if (p.y < p.r) {
+                p.y = p.r;
+                p.vy *= -1;
+            }
+            if (p.y > canvasH - p.r) {
+                p.y = canvasH - p.r;
+                p.vy *= -1;
+            }
+        }
+        /*程序循环*/
+        function circle() {
+            bg();
+            draw();
+            window.requestAnimationFrame(circle);
+        }
+        /*鼠标事件*/
+        window.onmouseover = function () {
+            mouseover = true;
+        };
+        window.onmouseout = function () {
+            mouseover = false;
+        };
+        window.onmousemove = function (e) {
+            X = e.clientX;
+            Y = e.clientY;
+        };
+        window.onmousedown = function () {
+            mousedown = true;
+        };
+        window.onmouseup = function () {
+            mousedown = false;
+        };
+        /*初始化*/
+        init();
+        circle();
+    }
+</script>
+</body>
+</html>
